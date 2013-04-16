@@ -143,8 +143,17 @@ class ControlMessage(object):
 
     :returns: stem.response.ControlMessage instance
     """
+    message = stem.socket.recv_message(StringIO.StringIO(content))
+    message_content = message.content()
+    keyword = message_content[0][2].split()[0]
+    if keyword == 'PROTOCOLINFO':
+      stem.response.convert("PROTOCOLINFO", message)
+    elif keyword == 'AUTHCHALLENGE':
+      stem.response.convert("AUTHCHALLENGE", message)
+    elif message_content[0][0][0]=='6':
+      stem.response.convert("EVENT", message)
 
-    return stem.socket.recv_message(StringIO.StringIO(content))
+    return message
 
   from_str = staticmethod(from_str)
 
