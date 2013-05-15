@@ -437,6 +437,15 @@ class TestController(unittest.TestCase):
       self.assertEqual([",".join(n) for n in nodefamilies], controller.get_conf("nodefamily", multiple = True))
       controller.msg("RESETCONF NodeFamily")
 
+      # cache update
+      new_controller = runner.get_tor_controller()
+      controller.set_cache_update(True)
+      controller.msg("SETCONF nodefamily=\"abc,xyz,pqrs\"")
+      new_controller.msg("SETCONF nodefamily=\"mno,tuv,wxyz\"")
+      self.assertEqual(['mno,tuv,wxyz'], controller.get_conf("nodefamily", multiple = True))
+      controller.msg("RESETCONF NodeFamily")
+      new_controller.close()
+
       # empty input
       self.assertEqual(None, controller.get_conf(""))
       self.assertEqual({}, controller.get_conf_map([]))
