@@ -42,7 +42,9 @@ providing its own for interacting at a higher level.
     |- remove_event_listener - removes a listener so it isn't notified of further events
     |
     |- is_caching_enabled - true if the controller has enabled caching
+    |- is_cache_update_enabled - true if the controller has enabled cache update
     |- set_caching - enables or disables caching
+    |- set_cache_update - enables or disables cache update
     |- clear_cache - clears any cached results
     |
     |- load_conf - loads configuration information as if it was in the torrc
@@ -658,6 +660,7 @@ class Controller(BaseController):
     super(Controller, self).__init__(control_socket)
 
     self._is_caching_enabled = True
+    self._is_cache_update_enabled = True
     self._request_cache = {}
 
     # mapping of event types to their listeners
@@ -677,20 +680,20 @@ class Controller(BaseController):
     self.add_event_listener(_sighup_listener, EventType.SIGNAL)
 
     def _confchanged_listener(event):
-      if self.is_caching_enabled():
+      if self.is_caching_enabled() and self.is_cache_update_enabled():
         for param, value in event.config.items():
-	  cache_key = "getconf.%s" % param.lower()
+          cache_key = "getconf.%s" % param.lower()
 
-	  if value is None:
-	    if cache_key in self._request_cache:
-	      del self._request_cache[cache_key]
-	  elif isinstance(value, (bytes, unicode)):
-	    self._request_cache[cache_key] = [value]
-	  else:
-	    self._request_cache[cache_key] = value
+          if value is None:
+            if cache_key in self._request_cache:
+              del self._request_cache[cache_key]
+          elif isinstance(value, (bytes, unicode)):
+            self._request_cache[cache_key] = [value]
+          else:
+            self._request_cache[cache_key] = value
 
-	  if param.lower() == "exitpolicy" and "exit_policy" in self._request_cache:
-	    del self._request_cache["exit_policy"]
+          if param.lower() == "exitpolicy" and "exit_policy" in self._request_cache:
+            del self._request_cache["exit_policy"]
 
     self.add_event_listener(_confchanged_listener, EventType.CONF_CHANGED)
 
@@ -1597,6 +1600,15 @@ class Controller(BaseController):
 
     return self._is_caching_enabled
 
+  def is_cache_update_enabled(self):
+    """
+    **True** if cache update has been enabled, **False** otherwise.
+
+    :returns: bool to indicate if cache update is enabled
+    """
+
+    return self._is_cache_update_enabled
+
   def set_caching(self, enabled):
     """
     Enables or disables caching of information retrieved from tor.
@@ -1606,8 +1618,20 @@ class Controller(BaseController):
 
     self._is_caching_enabled = enabled
 
+    if enabled is False:
+      self.set_cache_update_enabled(enabled)
+
     if not self._is_caching_enabled:
       self.clear_cache()
+
+  def set_cache_update(self, enabled):
+    """
+    Enables or disables cache update.
+
+    :param bool enabled: **True** to enable cache update, **False** to disable it
+    """
+
+    self._is_cache_update_enabled = enabled
 
   def clear_cache(self):
     """

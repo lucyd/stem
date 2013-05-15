@@ -432,6 +432,7 @@ class TestController(unittest.TestCase):
 
       # multivalue configuration keys
       nodefamilies = [("abc", "xyz", "pqrs"), ("mno", "tuv", "wxyz")]
+      controller.set_cache_update(False)
       controller.msg("SETCONF %s" % " ".join(["nodefamily=\"" + ",".join(x) + "\"" for x in nodefamilies]))
       self.assertEqual([",".join(n) for n in nodefamilies], controller.get_conf("nodefamily", multiple = True))
       controller.msg("RESETCONF NodeFamily")
