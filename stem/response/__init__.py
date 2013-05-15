@@ -150,7 +150,7 @@ class ControlMessage(object):
       stem.response.convert("PROTOCOLINFO", message)
     elif keyword == 'AUTHCHALLENGE':
       stem.response.convert("AUTHCHALLENGE", message)
-    elif message_content[0][0]=='650':
+    elif message_content[0][0] == '650':
       stem.response.convert("EVENT", message)
 
     return message
